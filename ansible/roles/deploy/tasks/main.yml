@@ -1,0 +1,9 @@
+- name: Copy docker-compose file
+  copy:
+    src: "{{ playbook_dir }}/../docker/docker-compose.yml"
+    dest: /home/hero/docker-compose.yml
+
+- name: Start containers
+  command: docker-compose up -d
+  args:
+    chdir: /home/hero

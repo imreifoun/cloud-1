@@ -1,0 +1,14 @@
+- name: Install required packages
+  apt:
+    name:
+      - docker.io
+      - docker-compose
+    state: present
+    update_cache: yes
+
+- name: Start docker service
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
