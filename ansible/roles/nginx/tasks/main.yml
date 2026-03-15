@@ -10,3 +10,26 @@
     state: started
     enabled: yes
 
+- name: Copy nginx configuration
+  copy:
+    src: wordpress.conf
+    dest: /etc/nginx/sites-available/wordpress.conf
+
+- name: Enable site
+  file:
+    src: /etc/nginx/sites-available/wordpress.conf
+    dest: /etc/nginx/sites-enabled/wordpress.conf
+    state: link
+
+- name: Remove default nginx site
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+
+- name: Test nginx configuration
+  command: nginx -t
+
+- name: Reload nginx
+  service:
+    name: nginx
+    state: reloaded

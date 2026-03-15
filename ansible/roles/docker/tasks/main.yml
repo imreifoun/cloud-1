@@ -1,3 +1,9 @@
+- name: Remove conflicting packages
+  apt:
+    name:
+      - containerd.io
+    state: absent
+
 - name: Install required packages
   apt:
     name:

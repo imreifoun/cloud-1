@@ -14,6 +14,7 @@ MySQL Database
 
 # Install required packages for Ansible and Docker
 
+apt update
 sudo apt install -y python3-pip git curl ufw
 
 # Set up UFW firewall
@@ -25,20 +26,19 @@ sudo ufw enable
 
 # Install Docker + Docker Compose
 
+covered in ansible
+
+# Install Docker Compose
+
 curl -fsSL https://get.docker.com -o get-docker.sh
 sudo sh get-docker.sh
 sudo usermod -aG docker $USER
 
-# Install Docker Compose
-
-sudo apt install -y docker-compose
-docker-compose --version
+covered in ansible
 
 # Install Nginx
 
-sudo apt install -y nginx
-sudo systemctl enable nginx
-sudo systemctl start nginx
+covered in ansible
 
 # Configure Firewall for Nginx
 
@@ -58,10 +58,7 @@ __________________________________________
 
 # Create Reverse Proxy Config
 
-example.com      → WordPress
-pma.example.com  → phpMyAdmin
-
-Create /etc/nginx/sites-available/wordpress.conf:
+covered in ansible
 
 server {
     listen 80;
@@ -86,6 +83,8 @@ server {
 }
 
 # Enable Site and Test Nginx
+
+covered in ansible
 
 sudo ln -s /etc/nginx/sites-available/wordpress.conf /etc/nginx/sites-enabled/
 sudo nginx -t
@@ -227,7 +226,9 @@ Explanation:
 
 From the ansible directory:
 
-    ansible-playbook -i inventory playbook.yml -e "ansible_become_pass=hero"
+    (local test) ansible-playbook -i inventory playbook.yml -e "ansible_become_pass=hero"
+
+    (vagrant test) ansible -i inventory server1 -m ping
 
 What happens automatically:
 
@@ -240,11 +241,18 @@ run containers
 Your WordPress site is deployed.
 
 
+______________________________________
 
+# vagrant test
 
+(on your local machine not vagrant machine)
 
+  sudo nano /etc/hosts
 
+  192.168.56.10 areifoun.com
+  192.168.56.10 pma.areifoun.com
 
+______________________________________
 
 
 

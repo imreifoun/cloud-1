@@ -1,2 +1,2 @@
 [server]
-127.0.0.1 ansible_user=hero ansible_connection=local ansible_become_pass=hero
+server1 ansible_host=192.168.56.10 ansible_user=vagrant ansible_ssh_private_key_file=/home/vagrant/project/ansible/server_key ansible_become_pass=vagrant
