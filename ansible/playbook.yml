@@ -2,6 +2,8 @@
   become: yes
 
   roles:
+    - ufw
+    - tls
     - docker
     - nginx
     - deploy
