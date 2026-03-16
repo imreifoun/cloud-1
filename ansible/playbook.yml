@@ -3,7 +3,5 @@
 
   roles:
     - ufw
-    - tls
     - docker
-    - nginx
-    - deploy
+    - aws_app
