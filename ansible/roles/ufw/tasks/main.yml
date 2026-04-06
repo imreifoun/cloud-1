@@ -22,5 +22,3 @@
 - name: Deny all other incoming traffic
   ufw:
     state: enabled
-    policy: deny
-    direction: incoming
