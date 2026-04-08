@@ -1,35 +1,24 @@
-- name: Install nginx
-  apt:
-    name: nginx
-    state: present
-    update_cache: yes
-
-- name: Start nginx
-  service:
-    name: nginx
-    state: started
-    enabled: yes
-
-- name: Copy nginx configuration
-  copy:
-    src: wordpress.conf
-    dest: /etc/nginx/sites-available/wordpress.conf
-
-- name: Enable site
+---
+- name: Create nginx configuration directory
   file:
-    src: /etc/nginx/sites-available/wordpress.conf
-    dest: /etc/nginx/sites-enabled/wordpress.conf
-    state: link
+    path: /opt/cloud1/conf.d
+    state: directory
+    mode: '0755'
+    owner: ubuntu
+    group: ubuntu
 
-- name: Remove default nginx site
-  file:
-    path: /etc/nginx/sites-enabled/default
-    state: absent
+- name: Copy main nginx configuration
+  template:
+    src: nginx.conf.j2
+    dest: /opt/cloud1/nginx.conf
+    mode: '0644'
+    owner: ubuntu
+    group: ubuntu
 
-- name: Test nginx configuration
-  command: nginx -t
-
-- name: Reload nginx
-  service:
-    name: nginx
-    state: reloaded
+- name: Copy temporary site configuration (HTTP only for certbot)
+  template:
+    src: default.conf.j2
+    dest: /opt/cloud1/conf.d/default.conf
+    mode: '0644'
+    owner: ubuntu
+    group: ubuntu

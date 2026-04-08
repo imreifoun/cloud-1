@@ -1,0 +1,109 @@
+# =====================================
+# SSH Keys and Credentials
+# =====================================
+
+ansible/server_key
+ansible/server_key.pub
+*.pem
+*.key
+id_rsa
+id_rsa.pub
+*.ppk
+server_key
+
+# =====================================
+# Environment Files
+# =====================================
+
+.env
+*.env
+.env.*
+!.env.example
+!.env.j2
+
+# =====================================
+# Ansible Files
+# =====================================
+
+*.retry
+.ansible/
+ansible.log
+
+# Real inventory (has your actual IP)
+ansible/inventory.ini
+# Keep the example version
+!ansible/inventory.ini.example
+
+# =====================================
+# Backup Files
+# =====================================
+*.sql
+*.sql.gz
+*.tar.gz
+*.zip
+backups/
+
+# =====================================
+# Operating System Files
+# =====================================
+
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*~
+.directory
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# =====================================
+# IDE and Editors
+# =====================================
+# VSCode
+.vscode/
+*.code-workspace
+
+# JetBrains (PyCharm, IntelliJ)
+.idea/
+*.iml
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+
+# =====================================
+# Python
+# =====================================
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+ENV/
+
+# =====================================
+# Logs
+# =====================================
+*.log
+logs/
+
+# =====================================
+# Temporary Files
+# =====================================
+tmp/
+temp/
+*.tmp

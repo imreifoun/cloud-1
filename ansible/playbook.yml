@@ -1,7 +1,27 @@
-- hosts: server
+---
+- name: Deploy Cloud-1 WordPress Infrastructure
+  hosts: webservers
   become: yes
-
+  vars:
+    app_domain: "{{ domain_name }}"
+    admin_email: "admin@{{ domain_name }}"
+    
   roles:
     - ufw
     - docker
-    - aws_app
+    - deploy
+    - nginx
+    - tls
+
+  tasks:
+    - name: Display deployment information
+      debug:
+        msg:
+          - "========================================="
+          - "Deployment completed successfully!"
+          - "========================================="
+          - "WordPress URL: https://{{ domain_name }}"
+          - "phpMyAdmin URL: https://{{ domain_name }}/phpmyadmin"
+          - ""
+          - "Please wait 2-3 minutes for all services to start"
+          - "========================================="

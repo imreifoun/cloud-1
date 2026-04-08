@@ -1,21 +1,72 @@
-- name: Remove conflicting packages
+---
+- name: Update apt cache
   apt:
-    name:
-      - containerd.io
-    state: absent
+    update_cache: yes
+    cache_valid_time: 3600
 
-- name: Install required packages
+- name: Install prerequisites
   apt:
     name:
-      - docker.io
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+      - python3-pip
+      - software-properties-common
+    state: present
+
+- name: Create directory for Docker GPG key
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Add Docker GPG key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: Add Docker repository
+  apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    state: present
+
+- name: Install Docker
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
       - docker-compose-plugin
-      - git
     state: present
     update_cache: yes
 
-- name: Start docker service
-  service:
+- name: Install Docker Compose standalone
+  get_url:
+    url: "https://github.com/docker/compose/releases/download/v2.24.0/docker-compose-linux-x86_64"
+    dest: /usr/local/bin/docker-compose
+    mode: '0755'
+
+- name: Install Docker Python library via apt
+  apt:
+    name:
+      - python3-docker
+    state: present
+    update_cache: yes
+
+- name: Ensure Docker service is running
+  systemd:
     name: docker
     state: started
     enabled: yes
 
+- name: Add ubuntu user to docker group
+  user:
+    name: ubuntu
+    groups: docker
+    append: yes
+
+- name: Reset ssh connection to allow user changes to affect
+  meta: reset_connection

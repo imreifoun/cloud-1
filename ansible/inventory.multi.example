@@ -1,0 +1,7 @@
+[webservers]
+cloud1 ansible_host=SERVER1_IP ansible_user=ubuntu ansible_ssh_private_key_file=./server_key domain_name=your-domain.com
+cloud2 ansible_host=SERVER2_IP ansible_user=ubuntu ansible_ssh_private_key_file=./server_key domain_name=cloud2.your-domain.com
+cloud3 ansible_host=SERVER3_IP ansible_user=ubuntu ansible_ssh_private_key_file=./server_key domain_name=cloud3.your-domain.com
+
+[webservers:vars]
+ansible_python_interpreter=/usr/bin/python3

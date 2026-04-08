@@ -1,19 +1,72 @@
-- name: Install OpenSSL
-  apt:
-    name: openssl
-    state: present
+---
+- name: Check if SSL certificate exists
+  stat:
+    path: /opt/cloud1/certbot_data/live/{{ domain_name }}/fullchain.pem
+  register: cert_exists
 
-- name: Create directory for SSL certificates
+- name: Create certbot directories
   file:
-    path: /etc/nginx/ssl
+    path: "{{ item }}"
     state: directory
+    mode: '0755'
+    owner: ubuntu
+    group: ubuntu
+  loop:
+    - /opt/cloud1/certbot_data
+    - /opt/cloud1/certbot_www
+    - /opt/cloud1/certbot_data/live
+    - /opt/cloud1/certbot_data/live/{{ domain_name }}
 
-- name: Generate self-signed SSL certificate
-  command: >
-    openssl req -x509 -nodes -days 365 -newkey rsa:2048
-    -keyout /etc/nginx/ssl/nginx.key
-    -out /etc/nginx/ssl/nginx.crt
-    -subj "/C=FR/ST=IDF/L=Paris/O=42/OU=Cloud-1/CN=localhost"
+- name: Create temporary self-signed certificate
+  shell: |
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+      -keyout /opt/cloud1/certbot_data/live/{{ domain_name }}/privkey.pem \
+      -out /opt/cloud1/certbot_data/live/{{ domain_name }}/fullchain.pem \
+      -subj "/C=US/ST=State/L=City/O=Organization/CN={{ domain_name }}"
   args:
-    creates: /etc/nginx/ssl/nginx.crt
+    creates: /opt/cloud1/certbot_data/live/{{ domain_name }}/fullchain.pem
+  when: not cert_exists.stat.exists
 
+- name: Start Docker Compose services
+  community.docker.docker_compose_v2:
+    project_src: /opt/cloud1
+    state: present
+    pull: "always"
+
+- name: Wait for nginx to be ready
+  wait_for:
+    port: 80
+    delay: 10
+    timeout: 60
+
+- name: Obtain Let's Encrypt certificate
+  shell: |
+    docker run --rm --name certbot \
+      -v /opt/cloud1/certbot_data:/etc/letsencrypt \
+      -v /opt/cloud1/certbot_www:/var/www/certbot \
+      certbot/certbot certonly --webroot \
+      -w /var/www/certbot \
+      -d {{ domain_name }} -d www.{{ domain_name }} \
+      --email {{ admin_email }} \
+      --agree-tos \
+      --no-eff-email \
+      --force-renewal \
+      --non-interactive
+  register: certbot_result
+  changed_when: "'Successfully received certificate' in certbot_result.stdout"
+  failed_when: false
+
+- name: Display certificate result
+  debug:
+    var: certbot_result.stdout_lines
+  when: certbot_result.stdout is defined
+
+- name: Restart nginx to use real certificate
+  shell: docker restart cloud1_nginx
+  when: certbot_result.changed
+
+- name: Display final status
+  debug:
+    msg:
+      - "TLS setup completed!"
+      - "Certificate status: {{ 'SUCCESS' if certbot_result.changed else 'Using existing or temporary certificate' }}"

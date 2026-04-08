@@ -1,265 +1,380 @@
-# cloud-1
+# Cloud-1: Automated WordPress Deployment on AWS EC2
 
-Internet
-   |
-   | 80 / 443
-   v
-Reverse Proxy (TLS)
-   |
-   |--------------------|
-   |                    |
-WordPress          phpMyAdmin
-   |
-MySQL Database
+[![Ansible](https://img.shields.io/badge/Ansible-2.15+-EE0000?style=flat&logo=ansible&logoColor=white)](https://www.ansible.com/)
+[![Docker](https://img.shields.io/badge/Docker-24.0+-2496ED?style=flat&logo=docker&logoColor=white)](https://www.docker.com/)
+[![Let's Encrypt](https://img.shields.io/badge/Let's%20Encrypt-SSL%2FTLS-003A70?style=flat&logo=letsencrypt&logoColor=white)](https://letsencrypt.org/)
+[![AWS](https://img.shields.io/badge/AWS-EC2-FF9900?style=flat&logo=amazon-aws&logoColor=white)](https://aws.amazon.com/ec2/)
 
-# Install required packages for Ansible and Docker
+A fully automated, production-ready WordPress deployment system using Ansible, Docker, and modern DevOps practices.
 
-apt update
-sudo apt install -y python3-pip git curl ufw
+**Live Demo**: https://camagru.dev | **phpMyAdmin**: https://camagru.dev/phpmyadmin
 
-# Set up UFW firewall
+---
 
-sudo ufw allow ssh
-sudo ufw allow 80
-sudo ufw allow 443
-sudo ufw enable
+## 📋 Table of Contents
 
-# Install Docker + Docker Compose
+- [Overview](#overview)
+- [Architecture](#architecture)
+- [Features](#features)
+- [Project Structure](#project-structure)
+- [Prerequisites](#prerequisites)
+- [Quick Start](#quick-start)
+- [Multi-Server Deployment](#multi-server-deployment)
+- [Configuration](#configuration)
+- [Security](#security)
+- [Maintenance](#maintenance)
+- [Troubleshooting](#troubleshooting)
 
-covered in ansible
+---
 
-# Install Docker Compose
+## 🎯 Overview
 
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
-sudo usermod -aG docker $USER
+**Cloud-1** automates complete WordPress stack deployment on AWS EC2 using Ansible. Each service runs in an isolated Docker container with automatic SSL/TLS certificates, persistent data storage, and comprehensive security.
 
-covered in ansible
+### Key Features
 
-# Install Nginx
+- ✅ **One-Command Deployment**: `ansible-playbook playbook.yml` - from clean server to production
+- ✅ **Container Isolation**: Each service in separate containers (1 process = 1 container)
+- ✅ **Data Persistence**: All data survives container restarts and server reboots
+- ✅ **Security First**: Firewall, SSL/TLS encryption, isolated database
+- ✅ **Multi-Server**: Deploy to multiple servers simultaneously
+- ✅ **Maintainable**: Modular Ansible roles
 
-covered in ansible
+---
 
-# Configure Firewall for Nginx
+## 🏗️ Architecture
 
-_________________________________
-sudo ufw app info 'Nginx Full'
-_________________________________
+### System Overview
+                     Internet
+                        │
+                        │ HTTPS (443) / HTTP (80)
+                        │
+                   ┌────▼─────┐
+                   │   EC2    │ UFW: 22, 80, 443
+                   │ Instance │
+                   └────┬─────┘
+                        │
+    ┌───────────────────┼───────────────────┐
+    │    Docker Network: cloud1_network     │
+    │                                        │
+    │  ┌────────────┐    ┌──────────────┐  │
+    │  │   Nginx    │    │   Certbot    │  │
+    │  │  :80, :443 │    │  (SSL Mgmt)  │  │
+    │  └─────┬──────┘    └──────────────┘  │
+    │        │                              │
+    │  ┌─────▼──────┐    ┌──────────────┐  │
+    │  │ WordPress  │    │ phpMyAdmin   │  │
+    │  │ PHP-FPM    │    │   Apache     │  │
+    │  └─────┬──────┘    └──────┬───────┘  │
+    │        │                   │          │
+    │  ┌─────▼───────────────────▼───────┐ │
+    │  │      MariaDB (Internal)         │ │
+    │  │         Port 3306               │ │
+    │  └─────────────────────────────────┘ │
+    └────────────────────────────────────────┘
 
-sudo ufw allow 'Nginx Full'
-sudo ufw delete allow 8080
-sudo ufw delete allow 8081
-__________________________________________
 
-delete → removes a firewall rule
-allow 8080 → removes the rule that allowed
-traffic to port 8080
-__________________________________________
+### Container Stack
 
-# Create Reverse Proxy Config
+| Container | Image | Purpose | Ports |
+|-----------|-------|---------|-------|
+| **nginx** | `nginx:alpine` | Reverse proxy, SSL termination | 80, 443 |
+| **wordpress** | `wordpress:6.4-php8.1-fpm-alpine` | WordPress application | 9000 (internal) |
+| **mysql** | `mariadb:10.11` | Database | 3306 (internal) |
+| **phpmyadmin** | `phpmyadmin:latest` | Database GUI | 80 (internal) |
+| **certbot** | `certbot/certbot:latest` | SSL automation | - |
 
-covered in ansible
+---
 
-server {
-    listen 80;
-    server_name areifoun.com;
+## ✨ Features
 
-    location / {
-        proxy_pass http://127.0.0.1:8080;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-}
+### Automation
+- 🤖 One-command deployment
+- 🔄 Idempotent (safe to run multiple times)
+- 📦 Zero manual configuration
+- 🎯 Portable to any Ubuntu 22.04 instance
 
-server {
-    listen 80;
-    server_name pma.areifoun.com;
+### Security
+- 🔒 Automatic Let's Encrypt SSL/TLS with renewal
+- 🔥 UFW firewall (only ports 22, 80, 443)
+- 🛡️ Database isolated from internet
+- 🔑 Encrypted secrets with random passwords
 
-    location / {
-        proxy_pass http://127.0.0.1:8081;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-}
+### Reliability
+- 💾 Data persists across reboots
+- 🔄 Auto-restart on failure
+- ❤️ Health checks for dependencies
+- 📊 Separate volumes for database/files/certificates
 
-# Enable Site and Test Nginx
+---
 
-covered in ansible
-
-sudo ln -s /etc/nginx/sites-available/wordpress.conf /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl reload nginx
-
-nginx -t → test config syntax.
-systemctl reload nginx → apply changes.
-
-# Enable HTTPS with Let’s Encrypt
-
-(i think those needs real domain)
-sudo apt install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d example.com -d pma.example.com
-
-# Verify Security
-
-Only ports 22, 80, 443 open:
-
-sudo ufw status
-
-# Install Ansible (on your LOCAL machine)
-
-Your laptop is the Ansible controller.
-
-    sudo apt update
-    sudo apt install ansible -y
-
-Check:
-
-    ansible --version
-
-# Project Structure
+## 📁 Project Structure
 
 cloud-1/
+├── README.md # This file
+├── .gitignore # Git exclusions
 │
-├── ansible/
-│   ├── inventory
-│   ├── playbook.yml
-│   └── roles/
-│        ├── docker/
-│        │    └── main.yml
-│        ├── nginx/
-│        │    └── main.yml
-│        └── deploy/
-│             └── main.yml
-└── docker/
-     └── docker-compose.yml
+├── ansible/ # Ansible automation code
+│ ├── ansible.cfg # Ansible configuration
+│ ├── inventory.ini # Server inventory (single server)
+│ ├── inventory.multi.example # Example multi-server inventory
+│ ├── server_key # SSH private key (DO NOT COMMIT) => (cp downloaded ec2 key)
+│ ├── playbook.yml # Main playbook - orchestrates all roles
+│ │
+│ └── roles/ # Modular Ansible roles
+│ │
+│ ├── ufw/ # Firewall configuration
+│ │ └── tasks/
+│ │ └── main.yml # UFW installation and rules
+│ │
+│ ├── docker/ # Docker installation
+│ │ ├── tasks/
+│ │ │ └── main.yml # Install Docker, Docker Compose, Python libs
+│ │ └── handlers/
+│ │ └── main.yml # Docker service handlers (optional)
+│ │
+│ ├── deploy/ # Application deployment
+│ │ ├── tasks/
+│ │ │ └── main.yml # Create directories, copy configs, start containers
+│ │ └── templates/
+│ │ ├── docker-compose.yml.j2 # Docker Compose template (Jinja2)
+│ │ └── .env.j2 # Environment variables template
+│ │
+│ ├── nginx/ # Web server configuration
+│ │ ├── tasks/
+│ │ │ └── main.yml # Copy Nginx configs
+│ │ └── templates/
+│ │ ├── nginx.conf.j2 # Main Nginx config
+│ │ └── default.conf.j2 # Site-specific config (WordPress + phpMyAdmin)
+│ │
+│ └── tls/ # SSL/TLS certificate management
+│ └── tasks/
+│ └── main.yml # Let's Encrypt certificate acquisition
+└── server_key
 
-# Inventory File
+### Key Files
 
-[server]
-your_server_ip ansible_user=ubuntu (if local add : ansible_connection=local)
+- **`playbook.yml`**: Orchestrates all deployment roles
+- **`inventory.ini`**: Defines target servers and variables
+- **`roles/deploy/templates/docker-compose.yml.j2`**: Container definitions
+- **`roles/nginx/templates/default.conf.j2`**: Nginx site configuration
+- **`roles/tls/tasks/main.yml`**: Let's Encrypt certificate automation
 
-# playbook.yml
+---
 
-- hosts: server
-  become: yes
+## 🔧 Prerequisites
 
-  roles:
-    - docker
-    - nginx
-    - deploy
+### Local Machine
 
-Explanation:
+| Tool | Version | Install |
+|------|---------|---------|
+| **Ansible** | 2.15+ | `brew install ansible` (macOS)<br>`pip3 install ansible` (other) |
+| **Python** | 3.8+ | Pre-installed on most systems |
+| **SSH** | Any | Pre-installed |
 
-    hosts: server
-    Run tasks on machines listed in inventory.
+### AWS EC2 Instance
 
-    become: yes
-    Run commands with sudo.
+| Requirement | Specification |
+|-------------|---------------|
+| **Instance Type** | t2.micro or larger (1GB RAM minimum) |
+| **OS** | Ubuntu 22.04 LTS |
+| **Storage** | 16GB minimum (20GB recommended) |
+| **Security Group** | Ports 22, 80, 443 open |
 
-    roles
-    Execute roles in order.
+**Security Group Configuration:**
 
-# Docker Role
+| Type | Protocol | Port | Source | Description |
+|------|----------|------|--------|-------------|
+| SSH | TCP | 22 | 0.0.0.0/0 | SSH access |
+| HTTP | TCP | 80 | 0.0.0.0/0 | HTTP (redirects to HTTPS) |
+| HTTPS | TCP | 443 | 0.0.0.0/0 | HTTPS |
 
-- name: Install required packages
-  apt:
-    name:
-      - docker.io
-      - docker-compose
-    state: present
-    update_cache: yes
+### Domain Configuration
 
-- name: Start docker service
-  service:
-    name: docker
-    state: started
-    enabled: yes
+Configure DNS A records pointing to your EC2 IP:
 
-Explanation:
+| Type | Host | Answer | TTL |
+|------|------|--------|-----|
+| A | @ | YOUR_EC2_IP | 300 |
+| A | www | YOUR_EC2_IP | 300 |
 
-    Task 1 installs:
+**Verify:**
+```bash
+nslookup camagru.dev
+# Should return your EC2 IP
+```
 
-        docker
-        docker-compose
+## Quick Start
+1. Clone Repository
+```Bash
 
-    Task 2 ensures Docker:
+git clone https://github.com/yourusername/cloud-1.git
+cd cloud-1
+2. Install Ansible
+```
 
-        starts automatically on boot
+```Bash
 
-# Nginx Role
+# macOS
+brew install ansible
 
-- name: Install nginx
-  apt:
-    name: nginx
-    state: present
-    update_cache: yes
+# Ubuntu/Debian
+sudo apt update && sudo apt install -y ansible
 
-- name: Start nginx
-  service:
-    name: nginx
-    state: started
-    enabled: yes
+# Using pip
+pip3 install ansible
 
-# Deploy Role
+# Verify
+ansible --version
+```
 
-- name: Copy docker-compose file
-  copy:
-    src: ../../docker/docker-compose.yml
-    dest: /home/ubuntu/docker-compose.yml
+3. Configure SSH Key
+```Bash
 
-- name: Start containers
-  command: docker-compose up -d
-  args:
-    chdir: /home/ubuntu
+# Copy your EC2 SSH key
+cp /path/to/your-key.pem ansible/server_key
 
-Explanation:
+# Set permissions
+chmod 400 ansible/server_key
+```
 
-    Task 1:
+4. Update Inventory
+```Bash
+nano ansible/inventory.ini
+```
 
-    copy docker-compose.yml to server
+**Update with your details:** 
 
-    Task 2:
+```ini
 
-    run containers automatically
+[webservers]
+cloud1 ansible_host=YOUR_EC2_IP ansible_user=ubuntu ansible_ssh_private_key_file=./server_key
 
-# Run the Full Deployment
+[webservers:vars]
+ansible_python_interpreter=/usr/bin/python3
+domain_name=your-domain.com
+```
 
-From the ansible directory:
+5. Test Connection
+```Bash
+cd ansible
+ansible all -m ping
+```
 
-    (local test) ansible-playbook -i inventory playbook.yml -e "ansible_become_pass=hero"
+**Expected output:**
 
-    (vagrant test) ansible -i inventory server1 -m ping
+```bash
 
-What happens automatically:
+cloud1 | SUCCESS => {
+    "changed": false,
+    "ping": "pong" }
 
-connect to server
-install docker
-install nginx
-copy docker-compose
-run containers
+```
 
-Your WordPress site is deployed.
+6. Deploy
+```Bash
 
+ansible-playbook playbook.yml
+```
 
-______________________________________
-
-# vagrant test
-
-(on your local machine not vagrant machine)
-
-  sudo nano /etc/hosts
-
-  192.168.56.10 areifoun.com
-  192.168.56.10 pma.areifoun.com
-
-______________________________________
-
-sudo ufw default deny incoming
-sudo ufw enable
-
-
-
-
+7. Access Your Site
+- WordPress: https://your-domain.com
+- phpMyAdmin: https://your-domain.com/phpmyadmin
 
 
+## Multi-Server Deployment
 
+Deploy to multiple servers simultaneously for testing, staging, or production environments.
+
+#### Method 1: Different Domains (Recommended)
+Each server gets its own subdomain.
+
+**Create** ansible/inventory.multi.example:
+
+```ini
+
+[webservers]
+cloud1 ansible_host=54.167.107.133 ansible_user=ubuntu ansible_ssh_private_key_file=./server_key domain_name=camagru.dev
+cloud2 ansible_host=54.167.107.200 ansible_user=ubuntu ansible_ssh_private_key_file=./server_key domain_name=cloud2.camagru.dev
+cloud3 ansible_host=54.167.107.250 ansible_user=ubuntu ansible_ssh_private_key_file=./server_key domain_name=cloud3.camagru.dev
+
+[webservers:vars]
+ansible_python_interpreter=/usr/bin/python3
+```
+
+***DNS Configuration:***
+
+Type  Host	    Answer	         Purpose
+ A	  @	        54.167.107.133	 camagru.dev
+ A	  cloud2	54.167.107.200	 cloud2.camagru.dev
+ A	  cloud3	54.167.107.250	 cloud3.camagru.dev
+
+
+#### Deploy:
+
+```Bash
+
+ansible-playbook -i inventory.multi.example playbook.yml
+```
+
+**Result:**
+
+✅ https://camagru.dev (Server 1)
+✅ https://cloud2.camagru.dev (Server 2)
+✅ https://cloud3.camagru.dev (Server 3)
+
+
+#### Method 2: Selective Deployment
+
+```Bash
+
+# Deploy only to cloud1
+ansible-playbook playbook.yml --limit cloud1
+
+# Deploy to cloud2 and cloud3
+ansible-playbook playbook.yml --limit cloud2,cloud3
+
+# Deploy to all (default)
+ansible-playbook playbook.yml
+```
+
+### Architecture: Load Balanced Setup
+For production with same domain:
+```bash
+                Load Balancer
+                  camagru.dev
+                      │
+         ┌────────────┼────────────┐
+         ▼            ▼            ▼
+    Server 1      Server 2     Server 3
+   (WordPress)   (WordPress)  (WordPress)
+```
+
+### Check Status
+
+```Bash
+
+# SSH to server
+ssh -i ansible/server_key ubuntu@YOUR_EC2_IP
+
+# View running containers
+docker ps
+
+# Check specific container
+docker logs cloud1_nginx
+docker logs cloud1_wordpress
+docker logs cloud1_mysql
+```
+
+### Restart Services
+
+```Bash
+
+# On server
+cd /opt/cloud1
+
+# Restart single service
+docker-compose restart nginx
+
+# Restart all
+docker-compose restart
