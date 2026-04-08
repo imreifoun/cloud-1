@@ -109,7 +109,7 @@ A fully automated, production-ready WordPress deployment system using Ansible, D
 ---
 
 ## 📁 Project Structure
-
+```bash
 cloud-1/
 ├── README.md # This file  
 ├── .gitignore # Git exclusions  
@@ -130,28 +130,28 @@ cloud-1/
 │ ├── docker/ # Docker installation  
 │ │ ├── tasks/  
 │ │ │ └── main.yml # Install Docker, Docker Compose, Python libs  
-│ │ └── handlers/
-│ │ └── main.yml # Docker service handlers (optional)
+│ │ └── handlers/  
+│ │ └── main.yml # Docker service handlers (optional)  
 │ │
-│ ├── deploy/ # Application deployment
-│ │ ├── tasks/
-│ │ │ └── main.yml # Create directories, copy configs, start containers
-│ │ └── templates/
-│ │ ├── docker-compose.yml.j2 # Docker Compose template (Jinja2)
-│ │ └── .env.j2 # Environment variables template
+│ ├── deploy/ # Application deployment  
+│ │ ├── tasks/  
+│ │ │ └── main.yml # Create directories, copy configs, start containers  
+│ │ └── templates/  
+│ │ ├── docker-compose.yml.j2 # Docker Compose template (Jinja2)  
+│ │ └── .env.j2 # Environment variables template  
 │ │
-│ ├── nginx/ # Web server configuration
-│ │ ├── tasks/
-│ │ │ └── main.yml # Copy Nginx configs
-│ │ └── templates/
-│ │ ├── nginx.conf.j2 # Main Nginx config
-│ │ └── default.conf.j2 # Site-specific config (WordPress + phpMyAdmin)
+│ ├── nginx/ # Web server configuration  
+│ │ ├── tasks/  
+│ │ │ └── main.yml # Copy Nginx configs  
+│ │ └── templates/  
+│ │ ├── nginx.conf.j2 # Main Nginx config  
+│ │ └── default.conf.j2 # Site-specific config (WordPress + phpMyAdmin)  
 │ │
-│ └── tls/ # SSL/TLS certificate management
-│ └── tasks/
-│ └── main.yml # Let's Encrypt certificate acquisition
-└── server_key
-
+│ └── tls/ # SSL/TLS certificate management  
+│ └── tasks/  
+│ └── main.yml # Let's Encrypt certificate acquisition  
+└── server_key  
+```
 ### Key Files
 
 - **`playbook.yml`**: Orchestrates all deployment roles
