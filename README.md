@@ -111,25 +111,25 @@ A fully automated, production-ready WordPress deployment system using Ansible, D
 ## 📁 Project Structure
 
 cloud-1/
-├── README.md # This file
-├── .gitignore # Git exclusions
+├── README.md # This file  
+├── .gitignore # Git exclusions  
 │
-├── ansible/ # Ansible automation code
-│ ├── ansible.cfg # Ansible configuration
-│ ├── inventory.ini # Server inventory (single server)
-│ ├── inventory.multi.example # Example multi-server inventory
-│ ├── server_key # SSH private key (DO NOT COMMIT) => (cp downloaded ec2 key)
-│ ├── playbook.yml # Main playbook - orchestrates all roles
+├── ansible/ # Ansible automation code  
+│ ├── ansible.cfg # Ansible configuration  
+│ ├── inventory.ini # Server inventory (single server)  
+│ ├── inventory.multi.example # Example multi-server inventory   
+│ ├── server_key # SSH private key (DO NOT COMMIT) => (cp downloaded ec2 key)  
+│ ├── playbook.yml # Main playbook - orchestrates all roles    
 │ │
-│ └── roles/ # Modular Ansible roles
+│ └── roles/ # Modular Ansible roles  
 │ │
-│ ├── ufw/ # Firewall configuration
-│ │ └── tasks/
-│ │ └── main.yml # UFW installation and rules
+│ ├── ufw/ # Firewall configuration  
+│ │ └── tasks/  
+│ │ └── main.yml # UFW installation and rules  
 │ │
-│ ├── docker/ # Docker installation
-│ │ ├── tasks/
-│ │ │ └── main.yml # Install Docker, Docker Compose, Python libs
+│ ├── docker/ # Docker installation  
+│ │ ├── tasks/  
+│ │ │ └── main.yml # Install Docker, Docker Compose, Python libs  
 │ │ └── handlers/
 │ │ └── main.yml # Docker service handlers (optional)
 │ │
